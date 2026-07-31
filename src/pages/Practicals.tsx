@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { 
   Download, Copy, Check, Search, Calendar, 
-  FileCode, Image as ImageIcon, BookOpen, Loader2, RefreshCw 
+  FileCode, Image as ImageIcon, BookOpen, Loader2, RefreshCw,
+  ChevronDown
 } from 'lucide-react';
 import JSZip from 'jszip';
 
@@ -34,6 +35,7 @@ const Practicals = () => {
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('All');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   // UI helper state: track copy notifications & active tabs per practical card
   // key: practicalId, value: activeFileIndex
@@ -214,18 +216,57 @@ const Practicals = () => {
             className="w-full bg-dark-800/40 border border-white/5 focus:border-primary/30 rounded-xl py-3 pl-11 pr-4 text-sm text-white outline-none transition-colors"
           />
         </div>
-        <div>
-          <select
-            value={selectedSubject}
-            onChange={e => setSelectedSubject(e.target.value)}
-            className="w-full bg-dark-800/40 border border-white/5 focus:border-primary/30 rounded-xl py-3 px-4 text-sm text-slate-300 outline-none transition-colors cursor-pointer"
+        <div className="relative">
+          {/* Trigger Button */}
+          <button
+            type="button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="w-full bg-dark-800/40 border border-white/5 focus:border-primary/30 rounded-xl py-3 px-4 text-sm text-slate-300 outline-none transition-all flex items-center justify-between cursor-pointer hover:border-white/15 active:scale-[0.98]"
           >
-            {subjects.map(sub => (
-              <option key={sub} value={sub} className="bg-dark-800 text-white">
-                {sub}
-              </option>
-            ))}
-          </select>
+            <span>{selectedSubject}</span>
+            <motion.div
+              animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            </motion.div>
+          </button>
+
+          {/* Backdrop click-away helper */}
+          {isDropdownOpen && (
+            <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
+          )}
+
+          {/* Dropdown Options */}
+          <AnimatePresence>
+            {isDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-dark-800 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 py-1.5 backdrop-blur-md bg-opacity-95"
+              >
+                {subjects.map(sub => (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => {
+                      setSelectedSubject(sub);
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-mono transition-colors flex items-center justify-between ${
+                      selectedSubject === sub
+                        ? 'bg-primary/10 text-white font-semibold border-l-2 border-primary'
+                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    {sub}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
