@@ -7,15 +7,15 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Portfolio', path: '/' },
     { name: 'Practicals', path: '/practicals' },
-    { name: 'Admin', path: '/admin' },
   ];
 
   return (
     <header className="fixed top-0 w-full bg-dark-900/80 backdrop-blur-md z-50 border-b border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link to="/" className="text-lg sm:text-xl font-mono font-bold text-white tracking-tighter shrink-0 select-none">
-          Aakanksha<span className="text-primary">.dev</span>
-        </Link>
+        <div className="text-lg sm:text-xl font-mono font-bold tracking-tighter shrink-0 select-none flex items-center">
+          <Link to="/" className="text-white hover:text-white/90 transition-colors">Aakanksha</Link>
+          <Link to="/admin" className="text-primary hover:text-primary-300 transition-colors">.dev</Link>
+        </div>
         
         <nav className="flex gap-3 sm:gap-6">
           {navLinks.map((link) => (
