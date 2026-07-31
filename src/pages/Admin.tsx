@@ -20,6 +20,7 @@ interface Practical {
   title: string;
   description: string;
   subject: string;
+  semester: string;
   code_files: CodeFile[];
   image_urls: string[];
 }
@@ -56,6 +57,7 @@ const Admin = () => {
   const [formDesc, setFormDesc] = useState('');
   const [formSubject, setFormSubject] = useState('');
   const [formDate, setFormDate] = useState('');
+  const [formSemester, setFormSemester] = useState('Semester 1');
   const [formCodeFiles, setFormCodeFiles] = useState<CodeFile[]>([]);
   const [formImageUrls, setFormImageUrls] = useState<string[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -180,6 +182,7 @@ const Admin = () => {
     setFormTitle('');
     setFormDesc('');
     setFormSubject('Web Development');
+    setFormSemester('Semester 1');
     setFormDate(new Date().toISOString().split('T')[0]);
     setFormCodeFiles([{ filename: 'index.js', content: '// Write your code here', language: 'javascript' }]);
     setFormImageUrls([]);
@@ -192,6 +195,7 @@ const Admin = () => {
     setFormTitle(prac.title);
     setFormDesc(prac.description);
     setFormSubject(prac.subject || '');
+    setFormSemester(prac.semester || 'Semester 1');
     setFormDate(prac.date);
     setFormCodeFiles(prac.code_files || []);
     setFormImageUrls(prac.image_urls || []);
@@ -276,6 +280,7 @@ const Admin = () => {
       title: formTitle,
       description: formDesc,
       subject: formSubject,
+      semester: formSemester,
       date: formDate || new Date().toISOString().split('T')[0],
       code_files: formCodeFiles,
       image_urls: formImageUrls
@@ -410,7 +415,7 @@ const Admin = () => {
             </h3>
 
             <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">Title</label>
                   <input
@@ -432,6 +437,20 @@ const Admin = () => {
                     className="w-full bg-black/40 border border-white/10 focus:border-primary/50 text-white rounded-lg p-3 outline-none transition-colors text-sm"
                     placeholder="e.g., Web Development"
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">Semester</label>
+                  <select
+                    value={formSemester}
+                    onChange={e => setFormSemester(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 focus:border-primary/50 text-white rounded-lg p-3 outline-none transition-colors text-sm h-[46px] cursor-pointer"
+                  >
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <option key={i} value={`Semester ${i + 1}`} className="bg-dark-800 text-white">
+                        Semester {i + 1}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -723,6 +742,11 @@ const Admin = () => {
                       <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-primary/20 text-primary bg-primary/5">
                         {prac.subject}
                       </span>
+                      {prac.semester && (
+                        <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-accent/20 text-accent bg-accent/5">
+                          {prac.semester}
+                        </span>
+                      )}
                     </div>
                     <p className="text-slate-400 text-sm max-w-2xl line-clamp-2">{prac.description}</p>
                     <div className="flex items-center gap-4 text-slate-500 text-xs font-mono">

@@ -23,6 +23,7 @@ interface Practical {
   title: string;
   description: string;
   subject: string;
+  semester: string;
   code_files: CodeFile[];
   image_urls: string[];
 }
@@ -36,6 +37,7 @@ const Practicals = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('All');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedSemester, setSelectedSemester] = useState('All');
   
   // UI helper state: track copy notifications & active tabs per practical card
   // key: practicalId, value: activeFileIndex
@@ -172,13 +174,20 @@ const Practicals = () => {
   // Get unique subjects for filter dropdown
   const subjects = ['All', ...Array.from(new Set(practicals.map(p => p.subject).filter(Boolean)))];
 
+  const SEMESTERS = [
+    'All',
+    'Semester 1', 'Semester 2', 'Semester 3', 'Semester 4',
+    'Semester 5', 'Semester 6', 'Semester 7', 'Semester 8'
+  ];
+
   // Filtering Logic
   const filteredPracticals = practicals.filter(p => {
     const matchesSearch = 
       p.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
       p.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSubject = selectedSubject === 'All' || p.subject === selectedSubject;
-    return matchesSearch && matchesSubject;
+    const matchesSemester = selectedSemester === 'All' || (p.semester || 'Semester 1') === selectedSemester;
+    return matchesSearch && matchesSubject && matchesSemester;
   });
 
   return (
@@ -270,6 +279,37 @@ const Practicals = () => {
         </div>
       </div>
 
+      {/* Semester Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar -mx-6 px-6 md:mx-0 md:px-0 scroll-smooth">
+        {SEMESTERS.map(sem => {
+          const isActive = selectedSemester === sem;
+          const count = practicals.filter(p => {
+            const matchesSubject = selectedSubject === 'All' || p.subject === selectedSubject;
+            const matchesSem = sem === 'All' || (p.semester || 'Semester 1') === sem;
+            return matchesSubject && matchesSem;
+          }).length;
+          
+          return (
+            <button
+              key={sem}
+              onClick={() => setSelectedSemester(sem)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-mono font-semibold whitespace-nowrap border transition-all ${
+                isActive
+                  ? 'bg-primary text-dark-900 border-primary shadow-lg shadow-primary/20 scale-[1.03]'
+                  : 'bg-dark-800/40 border-white/5 text-slate-400 hover:text-white hover:border-white/10'
+              }`}
+            >
+              {sem === 'All' ? 'All Semesters' : sem.replace('Semester', 'Sem')}
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                isActive ? 'bg-dark-900/10 text-dark-900' : 'bg-white/5 text-slate-500'
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Loading state */}
       {loading && (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -318,10 +358,15 @@ const Practicals = () => {
                 {/* Header Information */}
                 <div className="p-6 md:p-8 border-b border-white/5">
                   <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <span className="text-xs font-mono uppercase tracking-wider px-3 py-1 rounded bg-primary/10 border border-primary/20 text-primary">
                         {prac.subject}
                       </span>
+                      {prac.semester && (
+                        <span className="text-xs font-mono uppercase tracking-wider px-3 py-1 rounded bg-accent/10 border border-accent/20 text-accent">
+                          {prac.semester}
+                        </span>
+                      )}
                       <div className="flex items-center gap-1.5 text-slate-500 text-xs font-mono">
                         <Calendar className="w-4 h-4" />
                         {prac.date}
