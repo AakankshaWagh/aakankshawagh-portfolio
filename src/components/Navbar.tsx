@@ -12,17 +12,17 @@ const Navbar = () => {
 
   return (
     <header className="fixed top-0 w-full bg-dark-900/80 backdrop-blur-md z-50 border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link to="/" className="text-xl font-mono font-bold text-white tracking-tighter">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <Link to="/" className="text-lg sm:text-xl font-mono font-bold text-white tracking-tighter shrink-0 select-none">
           Aakanksha<span className="text-primary">.dev</span>
         </Link>
         
-        <nav className="flex gap-6">
+        <nav className="flex gap-3 sm:gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               to={link.path}
-              className="relative text-sm font-mono transition-colors hover:text-white"
+              className="relative text-xs sm:text-sm font-mono transition-colors hover:text-white py-1"
             >
               {link.name}
               {location.pathname === link.path && (
