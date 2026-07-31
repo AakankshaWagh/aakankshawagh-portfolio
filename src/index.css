@@ -5,6 +5,7 @@
 @layer base {
   body {
     @apply bg-dark-900 text-slate-300 font-sans;
+    color-scheme: dark;
   }
 }
 

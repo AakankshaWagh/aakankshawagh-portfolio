@@ -444,7 +444,7 @@ const Admin = () => {
                           <select
                             value={file.language}
                             onChange={e => handleCodeFileChange(index, 'language', e.target.value)}
-                            className="w-full bg-black/40 border border-white/10 focus:border-primary/30 text-white rounded-lg p-2 outline-none text-xs font-mono"
+                            className="w-full bg-black/40 border border-white/10 focus:border-primary/30 text-white rounded-lg p-2 outline-none text-xs font-mono h-[34px]"
                           >
                             {SUPPORTED_LANGUAGES.map(lang => (
                               <option key={lang.value} value={lang.value} className="bg-dark-800 text-white">{lang.label}</option>
