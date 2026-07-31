@@ -287,8 +287,7 @@ const Admin = () => {
     const practicalData = {
       title: formTitle,
       description: formDesc,
-      subject: formSubject,
-      semester: formSemester,
+      subject: `${formSubject} | ${formSemester}`,
       date: formDate || new Date().toISOString().split('T')[0],
       code_files: formCodeFiles,
       image_urls: formImageUrls
