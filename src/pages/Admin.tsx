@@ -68,6 +68,37 @@ const Admin = () => {
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
 
+  // Fancy Title Generator state
+  const [showFancyHelper, setShowFancyHelper] = useState(false);
+  const [helperType, setHelperType] = useState('Practical');
+  const [helperNumber, setHelperNumber] = useState(1);
+  const [helperTopic, setHelperTopic] = useState('');
+  const [helperTemplateIndex, setHelperTemplateIndex] = useState(0);
+
+  const helperTemplates = [
+    { format: (type: string, num: number, topic: string) => `🚀 ${type} #${num}: Deep Dive into ${topic}` },
+    { format: (type: string, num: number, topic: string) => `✨ ${type} ${num < 10 ? '0' : ''}${num} • ${topic}` },
+    { format: (type: string, num: number, topic: string) => `🎓 ${type} Exercise #${num}: ${topic} Implementation` },
+    { format: (type: string, num: number, topic: string) => `⚡ ${type} #${num} | Master ${topic}` }
+  ];
+
+  const getSuggestedNumber = (type: string) => {
+    const count = practicals.filter(p => 
+      p.title.toLowerCase().includes(type.toLowerCase())
+    ).length;
+    return count + 1;
+  };
+
+  useEffect(() => {
+    setHelperNumber(getSuggestedNumber(helperType));
+  }, [helperType, practicals]);
+
+  const applyFancyTitle = () => {
+    const generated = helperTemplates[helperTemplateIndex].format(helperType, helperNumber, helperTopic || 'Topic');
+    setFormTitle(generated);
+    setShowFancyHelper(false);
+  };
+
   useEffect(() => {
     if (formDate) {
       const parts = formDate.split('-');
@@ -194,6 +225,13 @@ const Admin = () => {
     setFormDate(new Date().toISOString().split('T')[0]);
     setFormCodeFiles([{ filename: 'index.js', content: '// Write your code here', language: 'javascript' }]);
     setFormImageUrls([]);
+    
+    // Reset Fancy Title Helper
+    setHelperTopic('');
+    setHelperType('Practical');
+    setHelperNumber(getSuggestedNumber('Practical'));
+    setShowFancyHelper(false);
+    
     setIsEditing(true);
   };
 
@@ -424,15 +462,125 @@ const Admin = () => {
             <form onSubmit={handleSave} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">Title</label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-xs font-mono uppercase tracking-wider text-slate-400">Title</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowFancyHelper(!showFancyHelper)}
+                      className="text-[10px] font-mono text-primary hover:text-primary-300 transition-colors flex items-center gap-1 select-none"
+                    >
+                      <span>✨ Fancy Title Helper</span>
+                    </button>
+                  </div>
                   <input
                     type="text"
                     required
                     value={formTitle}
                     onChange={e => setFormTitle(e.target.value)}
                     className="w-full bg-black/40 border border-white/10 focus:border-primary/50 text-white rounded-lg p-3 outline-none transition-colors text-sm"
-                    placeholder="e.g., Build a Custom Custom React Hooks"
+                    placeholder="e.g., Build a Custom React Hooks"
                   />
+
+                  {/* Fancy Title Generator Panel */}
+                  <AnimatePresence>
+                    {showFancyHelper && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-3 bg-black/30 border border-white/5 rounded-xl p-4 space-y-3 text-xs overflow-hidden"
+                      >
+                        <div className="flex flex-wrap gap-3">
+                          {/* Helper Type Selector */}
+                          <div className="flex-grow min-w-[140px]">
+                            <label className="block text-[10px] uppercase text-slate-500 mb-1 font-mono">Type</label>
+                            <div className="flex gap-1 bg-black/40 p-1 rounded-lg border border-white/5">
+                              {['Practical', 'Assignment', 'Lab'].map(type => (
+                                <button
+                                  key={type}
+                                  type="button"
+                                  onClick={() => setHelperType(type)}
+                                  className={`flex-1 py-1 rounded text-[10px] font-mono transition-all ${
+                                    helperType === type 
+                                      ? 'bg-primary text-dark-900 font-bold' 
+                                      : 'text-slate-400 hover:text-white'
+                                  }`}
+                                >
+                                  {type}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Helper Number Input */}
+                          <div className="w-16">
+                            <label className="block text-[10px] uppercase text-slate-500 mb-1 font-mono">No.</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={helperNumber}
+                              onChange={e => setHelperNumber(parseInt(e.target.value) || 1)}
+                              className="w-full bg-black/40 border border-white/5 rounded-lg p-1 text-center text-white outline-none font-mono text-xs focus:border-primary/30 h-[28px]"
+                            />
+                          </div>
+
+                          {/* Helper Topic Input */}
+                          <div className="flex-grow-[2] min-w-[180px]">
+                            <label className="block text-[10px] uppercase text-slate-500 mb-1 font-mono">Topic / Technology</label>
+                            <input
+                              type="text"
+                              value={helperTopic}
+                              onChange={e => setHelperTopic(e.target.value)}
+                              placeholder="e.g., CSS Flexbox Layouts"
+                              className="w-full bg-black/40 border border-white/5 rounded-lg p-1 px-2 text-white outline-none text-xs focus:border-primary/30 h-[28px]"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Helper Format Selector */}
+                        <div>
+                          <label className="block text-[10px] uppercase text-slate-500 mb-1.5 font-mono">Fancy Template Styles</label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {helperTemplates.map((tpl, i) => {
+                              const rendered = tpl.format(helperType, helperNumber, helperTopic || 'Topic');
+                              const isSelected = helperTemplateIndex === i;
+                              return (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  onClick={() => setHelperTemplateIndex(i)}
+                                  className={`p-2 rounded-lg border text-left font-mono text-[9px] transition-all truncate ${
+                                    isSelected
+                                      ? 'border-primary bg-primary/5 text-white font-semibold'
+                                      : 'border-white/5 bg-black/20 text-slate-400 hover:text-white hover:border-white/10'
+                                  }`}
+                                  title={rendered}
+                                >
+                                  <span className="text-slate-500 mr-1">S{i + 1}:</span>
+                                  {rendered}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Helper Preview and Apply */}
+                        <div className="flex items-center justify-between border-t border-white/5 pt-2 mt-2 gap-4">
+                          <div className="truncate text-slate-300 font-mono text-[10px] flex-grow">
+                            <span className="text-slate-500 mr-1">Preview:</span>
+                            {helperTemplates[helperTemplateIndex].format(helperType, helperNumber, helperTopic || 'Topic')}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={applyFancyTitle}
+                            className="bg-primary text-dark-900 font-bold px-3 py-1.5 rounded-lg text-[10px] font-mono hover:opacity-90 transition-all shrink-0"
+                          >
+                            Apply Title
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 <div>
                   <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">Subject / Category</label>
