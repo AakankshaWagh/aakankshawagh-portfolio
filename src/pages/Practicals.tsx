@@ -118,11 +118,19 @@ const Practicals = () => {
         .order('date', { ascending: false });
 
       if (error) throw error;
-      setPracticals(data || []);
+      const parsed = (data || []).map(p => {
+        const [subj, sem] = (p.subject || '').split(' | ');
+        return {
+          ...p,
+          subject: subj || '',
+          semester: sem || 'Semester 1'
+        };
+      });
+      setPracticals(parsed);
 
       // Initialize default active tabs
       const initialTabs: Record<string, number> = {};
-      (data || []).forEach(p => {
+      parsed.forEach(p => {
         initialTabs[p.id] = 0;
       });
       setActiveTabMap(initialTabs);
