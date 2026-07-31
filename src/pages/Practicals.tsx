@@ -79,17 +79,29 @@ const Practicals = () => {
         }
       }
 
-      // 3. Generate ZIP blob
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      // 3. Generate ZIP blob with explicit MIME type
+      const zipBlob = await zip.generateAsync({ 
+        type: 'blob',
+        mimeType: 'application/zip'
+      });
       
-      // 4. Download in browser
+      // 4. Download in browser with delay to ensure Chrome respects the download attribute
       const element = document.createElement("a");
-      element.href = URL.createObjectURL(zipBlob);
-      const sanitizedTitle = prac.title.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const file = new Blob([zipBlob], { type: 'application/zip' });
+      const objectUrl = URL.createObjectURL(file);
+      
+      element.href = objectUrl;
+      const sanitizedTitle = (prac.title || 'practical').toLowerCase().replace(/[^a-z0-9]/g, '-');
       element.download = `${sanitizedTitle}.zip`;
+      
       document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+      
+      setTimeout(() => {
+        element.click();
+        document.body.removeChild(element);
+        // Clean up the URL resource after the download has started
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
+      }, 100);
 
     } catch (err: any) {
       alert("Failed to build ZIP file: " + err.message);
