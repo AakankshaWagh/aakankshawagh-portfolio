@@ -79,29 +79,19 @@ const Practicals = () => {
         }
       }
 
-      // 3. Generate ZIP blob with explicit MIME type
-      const zipBlob = await zip.generateAsync({ 
-        type: 'blob',
-        mimeType: 'application/zip'
-      });
+      // 3. Generate ZIP as a base64 string
+      const base64Data = await zip.generateAsync({ type: 'base64' });
       
-      // 4. Download in browser with delay to ensure Chrome respects the download attribute
+      // 4. Download in browser using a Data URL (which Chrome respects without UUID renaming)
       const element = document.createElement("a");
-      const file = new Blob([zipBlob], { type: 'application/zip' });
-      const objectUrl = URL.createObjectURL(file);
-      
-      element.href = objectUrl;
+      element.href = `data:application/zip;base64,${base64Data}`;
       const sanitizedTitle = (prac.title || 'practical').toLowerCase().replace(/[^a-z0-9]/g, '-');
       element.download = `${sanitizedTitle}.zip`;
       
+      element.style.display = 'none';
       document.body.appendChild(element);
-      
-      setTimeout(() => {
-        element.click();
-        document.body.removeChild(element);
-        // Clean up the URL resource after the download has started
-        setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
-      }, 100);
+      element.click();
+      document.body.removeChild(element);
 
     } catch (err: any) {
       alert("Failed to build ZIP file: " + err.message);
@@ -151,9 +141,10 @@ const Practicals = () => {
 
   const handleDownloadFile = (filename: string, content: string) => {
     const element = document.createElement("a");
-    const file = new Blob([content], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
+    // Use data URL with utf-8 encoding for reliable file names in Chrome
+    element.href = `data:text/plain;charset=utf-8,${encodeURIComponent(content)}`;
     element.download = filename;
+    element.style.display = 'none';
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
