@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Trash, LogOut, Edit, Save, Upload, X, 
-  FileCode, Image as ImageIcon, Loader2, Calendar, BookOpen
+  FileCode, Image as ImageIcon, Loader2, Calendar, BookOpen,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 interface CodeFile {
@@ -59,6 +60,65 @@ const Admin = () => {
   const [formImageUrls, setFormImageUrls] = useState<string[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+
+  // Custom Calendar Datepicker states
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
+
+  useEffect(() => {
+    if (formDate) {
+      const parts = formDate.split('-');
+      if (parts.length === 3) {
+        setCalendarYear(parseInt(parts[0], 10));
+        setCalendarMonth(parseInt(parts[1], 10) - 1);
+      }
+    }
+  }, [formDate]);
+
+  const MONTHS = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const handlePrevMonth = () => {
+    if (calendarMonth === 0) {
+      setCalendarMonth(11);
+      setCalendarYear(calendarYear - 1);
+    } else {
+      setCalendarMonth(calendarMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (calendarMonth === 11) {
+      setCalendarMonth(0);
+      setCalendarYear(calendarYear + 1);
+    } else {
+      setCalendarMonth(calendarMonth + 1);
+    }
+  };
+
+  const handleSelectDay = (day: number) => {
+    const formattedDate = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    setFormDate(formattedDate);
+    setShowCalendar(false);
+  };
+
+  const handleClearDate = () => {
+    setFormDate('');
+    setShowCalendar(false);
+  };
+
+  const handleTodayDate = () => {
+    const today = new Date();
+    const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    setFormDate(formattedDate);
+    setShowCalendar(false);
+  };
+
+  const startDayIndex = new Date(calendarYear, calendarMonth, 1).getDay();
+  const totalDays = new Date(calendarYear, calendarMonth + 1, 0).getDate();
 
   useEffect(() => {
     // Get initial session
@@ -386,15 +446,107 @@ const Admin = () => {
                     placeholder="A descriptive overview of this exercise, instructions, learning objectives..."
                   />
                 </div>
-                <div>
+                <div className="relative">
                   <label className="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={formDate}
-                    onChange={e => setFormDate(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 focus:border-primary/50 text-white rounded-lg p-3 outline-none transition-colors text-sm font-mono"
-                  />
+                  <div 
+                    onClick={() => setShowCalendar(!showCalendar)}
+                    className="w-full bg-black/40 border border-white/10 focus:border-primary/50 text-white rounded-lg p-3 outline-none transition-colors text-sm font-mono flex items-center justify-between cursor-pointer hover:border-white/20 active:scale-[0.99] select-none h-[46px]"
+                  >
+                    <span>{formDate ? formDate.split('-').reverse().join('/') : 'Select Date'}</span>
+                    <Calendar className="w-4 h-4 text-slate-400" />
+                  </div>
+
+                  {/* Backdrop to close calendar when clicking outside */}
+                  {showCalendar && (
+                    <div className="fixed inset-0 z-40" onClick={() => setShowCalendar(false)} />
+                  )}
+
+                  <AnimatePresence>
+                    {showCalendar && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-full mt-2 bg-dark-800 border border-white/10 p-4 rounded-xl shadow-2xl z-50 w-72 font-sans select-none backdrop-blur-md bg-opacity-95"
+                      >
+                        {/* Custom Calendar Header */}
+                        <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
+                          <button
+                            type="button"
+                            onClick={handlePrevMonth}
+                            className="p-1 hover:text-white hover:bg-white/5 rounded text-slate-400 transition-colors"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <span className="text-white font-mono text-sm font-bold">
+                            {MONTHS[calendarMonth]} {calendarYear}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleNextMonth}
+                            className="p-1 hover:text-white hover:bg-white/5 rounded text-slate-400 transition-colors"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Weekday labels */}
+                        <div className="grid grid-cols-7 gap-1 text-center text-slate-500 text-xs font-mono font-semibold mb-2">
+                          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
+                            <div key={d}>{d}</div>
+                          ))}
+                        </div>
+
+                        {/* Calendar Days Grid */}
+                        <div className="grid grid-cols-7 gap-1 font-mono">
+                          {/* Empty cells for padding */}
+                          {Array.from({ length: startDayIndex }).map((_, i) => (
+                            <div key={`empty-${i}`} />
+                          ))}
+                          
+                          {/* Month days */}
+                          {Array.from({ length: totalDays }).map((_, i) => {
+                            const day = i + 1;
+                            const isSelected = 
+                              formDate === `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                            return (
+                              <button
+                                key={day}
+                                type="button"
+                                onClick={() => handleSelectDay(day)}
+                                className={`py-1.5 rounded text-center text-xs transition-colors hover:bg-primary/10 hover:text-white ${
+                                  isSelected 
+                                    ? 'bg-primary text-dark-900 font-bold' 
+                                    : 'text-slate-300'
+                                }`}
+                              >
+                                {day}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Bottom Actions */}
+                        <div className="flex justify-between border-t border-white/5 mt-4 pt-3 text-xs text-primary font-bold font-mono">
+                          <button 
+                            type="button" 
+                            onClick={handleClearDate}
+                            className="hover:text-primary-300 transition-colors"
+                          >
+                            Clear
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={handleTodayDate}
+                            className="hover:text-primary-300 transition-colors"
+                          >
+                            Today
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
