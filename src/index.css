@@ -11,25 +11,47 @@
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a; /* dark-900 equivalent */
+  background: #0B0F19; /* matches theme main dark background */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155; /* slate-700 equivalent */
-  border-radius: 4px;
+  background: #38bdf8; /* sky-400 primary blue */
+  border: 2.5px solid #0B0F19; /* spacing padding inside scrollbar */
+  border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569; /* slate-600 equivalent */
+  background: #0ea5e9; /* sky-500 hover blue */
 }
 
 /* Smooth Page Transitions (View Transitions API / framer-motion prep) */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.5s;
+}
+
+/* Lenis Smooth Scroll Rules */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis-scrolling iframe {
+  pointer-events: none;
 }
