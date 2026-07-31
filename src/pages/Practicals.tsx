@@ -7,6 +7,7 @@ import {
   Download, Copy, Check, Search, Calendar, 
   FileCode, Image as ImageIcon, BookOpen, Loader2, RefreshCw 
 } from 'lucide-react';
+import JSZip from 'jszip';
 
 interface CodeFile {
   filename: string;
@@ -39,6 +40,63 @@ const Practicals = () => {
   const [activeTabMap, setActiveTabMap] = useState<Record<string, number>>({});
   // key: practicalId + '_' + fileIndex, value: boolean
   const [copiedMap, setCopiedMap] = useState<Record<string, boolean>>({});
+  // key: practicalId, value: boolean (loading state for zip downloads)
+  const [downloadingZipMap, setDownloadingZipMap] = useState<Record<string, boolean>>({});
+
+  const handleDownloadZip = async (prac: Practical) => {
+    setDownloadingZipMap(prev => ({ ...prev, [prac.id]: true }));
+    try {
+      const zip = new JSZip();
+
+      // 1. Add code files
+      if (prac.code_files && prac.code_files.length > 0) {
+        const codeFolder = zip.folder("code");
+        prac.code_files.forEach(file => {
+          if (codeFolder) {
+            codeFolder.file(file.filename, file.content);
+          }
+        });
+      }
+
+      // 2. Fetch and add output screenshots
+      if (prac.image_urls && prac.image_urls.length > 0) {
+        const imagesFolder = zip.folder("output_images");
+        for (let i = 0; i < prac.image_urls.length; i++) {
+          const url = prac.image_urls[i];
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Fetch failed');
+            const blob = await response.blob();
+            
+            // Get proper file extension
+            const ext = url.split('.').pop()?.split('?')[0] || 'png';
+            if (imagesFolder) {
+              imagesFolder.file(`screenshot_${i + 1}.${ext}`, blob);
+            }
+          } catch (err) {
+            console.error(`Failed to pack image in zip: ${url}`, err);
+          }
+        }
+      }
+
+      // 3. Generate ZIP blob
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      
+      // 4. Download in browser
+      const element = document.createElement("a");
+      element.href = URL.createObjectURL(zipBlob);
+      const sanitizedTitle = prac.title.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      element.download = `${sanitizedTitle}.zip`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+
+    } catch (err: any) {
+      alert("Failed to build ZIP file: " + err.message);
+    } finally {
+      setDownloadingZipMap(prev => ({ ...prev, [prac.id]: false }));
+    }
+  };
 
   useEffect(() => {
     fetchPracticals();
@@ -216,13 +274,28 @@ const Practicals = () => {
                 {/* Header Information */}
                 <div className="p-6 md:p-8 border-b border-white/5">
                   <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                    <span className="text-xs font-mono uppercase tracking-wider px-3 py-1 rounded bg-primary/10 border border-primary/20 text-primary">
-                      {prac.subject}
-                    </span>
-                    <div className="flex items-center gap-1.5 text-slate-500 text-xs font-mono">
-                      <Calendar className="w-4 h-4" />
-                      {prac.date}
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-mono uppercase tracking-wider px-3 py-1 rounded bg-primary/10 border border-primary/20 text-primary">
+                        {prac.subject}
+                      </span>
+                      <div className="flex items-center gap-1.5 text-slate-500 text-xs font-mono">
+                        <Calendar className="w-4 h-4" />
+                        {prac.date}
+                      </div>
                     </div>
+
+                    <button
+                      onClick={() => handleDownloadZip(prac)}
+                      disabled={downloadingZipMap[prac.id]}
+                      className="flex items-center gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-dark-900 font-bold font-mono text-xs px-4 py-2 rounded-lg transition-all disabled:opacity-50 shadow-md shadow-primary/5"
+                    >
+                      {downloadingZipMap[prac.id] ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5" />
+                      )}
+                      Download ZIP Pack
+                    </button>
                   </div>
                   <h3 className="text-xl md:text-2xl font-bold text-white mb-3">{prac.title}</h3>
                   <p className="text-slate-400 text-sm md:text-base leading-relaxed">{prac.description}</p>
