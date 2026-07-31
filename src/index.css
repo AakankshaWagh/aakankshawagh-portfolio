@@ -3,9 +3,15 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scrollbar-color: #38bdf8 #0B0F19;
+    scrollbar-width: thin;
+  }
   body {
     @apply bg-dark-900 text-slate-300 font-sans;
     color-scheme: dark;
+    scrollbar-color: #38bdf8 #0B0F19;
+    scrollbar-width: thin;
   }
 }
 
